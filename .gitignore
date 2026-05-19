@@ -1,0 +1,118 @@
+# ---------- OS / Editor ----------
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+*.iml
+
+# ---------- Claude Code ----------
+.claude/
+
+# ---------- Environment / Secrets ----------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---------- Logs ----------
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ============================================================
+# Python / FastAPI (backend)
+# ============================================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+pip-wheel-metadata/
+share/python-wheels/
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Type checkers / linters
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# FastAPI / databases
+*.sqlite3
+*.db
+instance/
+
+# Package managers
+pip-log.txt
+pip-delete-this-directory.txt
+poetry.lock.bak
+
+# ============================================================
+# Next.js / Node (frontend)
+# ============================================================
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# Next.js build output
+.next/
+out/
+next-env.d.ts
+
+# Production builds
+build/
+
+# Testing
+coverage/
+
+# Misc
+.cache/
+.parcel-cache/
+.turbo/
+.swc/
+.vercel
+.netlify
+
+# TypeScript
+*.tsbuildinfo
+
+# Storybook
+storybook-static/
