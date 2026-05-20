@@ -1,0 +1,39 @@
+"use client";
+
+import { useForm, FormProvider } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { mndaSchema, defaultValues, type MndaFormValues } from "@/lib/schema";
+import { MndaForm } from "./mnda-form";
+import { MndaPreview } from "./mnda-preview";
+import { DownloadButton } from "./download-button";
+
+export function MndaCreator() {
+  const methods = useForm<MndaFormValues>({
+    resolver: zodResolver(mndaSchema),
+    defaultValues,
+    mode: "onChange",
+  });
+
+  return (
+    <FormProvider {...methods}>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <section
+          aria-label="Form"
+          className="flex flex-col gap-6"
+        >
+          <MndaForm />
+          <div className="sticky bottom-0 -mx-2 border-t border-zinc-200 bg-white/90 px-2 py-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
+            <DownloadButton />
+          </div>
+        </section>
+
+        <section
+          aria-label="Preview"
+          className="lg:sticky lg:top-6 lg:h-[calc(100vh-3rem)] lg:overflow-y-auto"
+        >
+          <MndaPreview />
+        </section>
+      </div>
+    </FormProvider>
+  );
+}
