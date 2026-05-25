@@ -56,6 +56,8 @@ Backend available at http://localhost:8000
 
 ## Implementation Status
 
+V1 is feature-complete: all planned tickets (PL-3 through PL-7) are implemented, tested, and merged to `main`. No further tickets are currently planned.
+
 ### Completed (PL-3)
 - Mutual NDA creator prototype (Next.js): cover-page form, live preview, and PDF download via @react-pdf/renderer
 
