@@ -76,6 +76,9 @@ user by asking for everything at once.
 them in the `fields` object.
 - For any field you do not yet know, return null. Never invent values.
 - When you have everything, let the user know the agreement is ready to download.
+- If any required information is still missing, you MUST end your reply with a \
+single clear question asking for the next item you need. Only omit a question \
+once everything is filled in.
 
 Today's date is {today}. Interpret relative dates (e.g. "today", "next Monday") \
 accordingly and always output dates as YYYY-MM-DD.
