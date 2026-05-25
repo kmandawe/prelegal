@@ -1,78 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { useFormContext } from "react-hook-form";
-import type { FieldPath } from "react-hook-form";
-import type { MndaFormValues } from "@/lib/schema";
+import type {
+  AssistantResponse,
+  ChatMessage,
+  DocumentType,
+  DocValues,
+} from "@/lib/document-types";
+import { mergeFields } from "@/lib/document-types";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-
-type ChatRole = "user" | "assistant";
-type ChatMessage = { role: ChatRole; content: string };
-
-type PartyFields = {
-  printName: string | null;
-  title: string | null;
-  company: string | null;
-  noticeAddress: string | null;
-};
-
-type ChatFields = {
-  purpose: string | null;
-  effectiveDate: string | null;
-  mndaTermKind: "years" | "untilTerminated" | null;
-  mndaTermYears: number | null;
-  termOfConfidentialityKind: "years" | "perpetuity" | null;
-  termOfConfidentialityYears: number | null;
-  governingLawState: string | null;
-  jurisdiction: string | null;
-  modifications: string | null;
-  party1: PartyFields;
-  party2: PartyFields;
-};
-
-type ChatResponse = { reply: string; fields: ChatFields };
-
-const GREETING: ChatMessage = {
-  role: "assistant",
-  content:
-    "Hi! I'll help you put together a Mutual NDA. Tell me what you need - for " +
-    "example, who the two parties are and why you're sharing confidential " +
-    "information.",
-};
-
-/**
- * Applies the model's extracted fields onto the shared form. Only non-null
- * values are written, so a field the model doesn't yet know never clears one
- * the user already has. The live preview reacts to these updates automatically.
- */
-function applyFields(
-  fields: ChatFields,
-  setValue: ReturnType<typeof useFormContext<MndaFormValues>>["setValue"],
-) {
-  const set = (name: FieldPath<MndaFormValues>, value: unknown) => {
-    if (value !== null && value !== undefined) {
-      setValue(name, value as never, { shouldValidate: true, shouldDirty: true });
-    }
-  };
-
-  set("purpose", fields.purpose);
-  set("effectiveDate", fields.effectiveDate);
-  set("mndaTermKind", fields.mndaTermKind);
-  set("mndaTermYears", fields.mndaTermYears);
-  set("termOfConfidentialityKind", fields.termOfConfidentialityKind);
-  set("termOfConfidentialityYears", fields.termOfConfidentialityYears);
-  set("governingLawState", fields.governingLawState);
-  set("jurisdiction", fields.jurisdiction);
-  set("modifications", fields.modifications);
-
-  for (const p of ["party1", "party2"] as const) {
-    set(`${p}.printName`, fields[p]?.printName);
-    set(`${p}.title`, fields[p]?.title);
-    set(`${p}.company`, fields[p]?.company);
-    set(`${p}.noticeAddress`, fields[p]?.noticeAddress);
-  }
-}
 
 function Bubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
@@ -91,9 +28,19 @@ function Bubble({ message }: { message: ChatMessage }) {
   );
 }
 
-export function MndaChat() {
-  const { setValue, getValues } = useFormContext<MndaFormValues>();
-  const [messages, setMessages] = React.useState<ChatMessage[]>([GREETING]);
+export function GenericChat({
+  doc,
+  values,
+  setValues,
+  messages,
+  setMessages,
+}: {
+  doc: DocumentType;
+  values: DocValues;
+  setValues: React.Dispatch<React.SetStateAction<DocValues>>;
+  messages: ChatMessage[];
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
+}) {
   const [input, setInput] = React.useState("");
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -121,14 +68,18 @@ export function MndaChat() {
     setError(null);
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch("/api/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next, fields: getValues() }),
+        body: JSON.stringify({
+          messages: next,
+          documentType: doc.id,
+          fields: values,
+        }),
       });
       if (!res.ok) throw new Error("request failed");
-      const data = (await res.json()) as ChatResponse;
-      applyFields(data.fields, setValue);
+      const data = (await res.json()) as AssistantResponse;
+      setValues((prev) => mergeFields(prev, data.fields));
       setMessages([...next, { role: "assistant", content: data.reply }]);
     } catch {
       setError("Sorry, something went wrong. Please try sending that again.");
@@ -153,10 +104,7 @@ export function MndaChat() {
         Chat with the assistant
       </h2>
 
-      <div
-        ref={scrollRef}
-        className="flex h-80 flex-col gap-3 overflow-y-auto pr-1"
-      >
+      <div ref={scrollRef} className="flex h-80 flex-col gap-3 overflow-y-auto pr-1">
         {messages.map((message, i) => (
           <Bubble key={i} message={message} />
         ))}

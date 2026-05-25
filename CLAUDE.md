@@ -8,7 +8,7 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The current implementation provides the V1 technical foundation (PL-4): a fake login screen and a Mutual NDA creator (PL-3) served from a FastAPI backend, now driven by a freeform AI chat (PL-5) that asks about the document and populates the cover-page fields. Support for all 11 document types and real authentication with document persistence are planned (PL-6 and PL-7) and not yet built.
+The current implementation provides the V1 technical foundation (PL-4): a fake login screen and a Mutual NDA creator (PL-3) served from a FastAPI backend, driven by a freeform AI chat (PL-5). It now supports all document types in the catalog (PL-6): a chat-driven picker triages what the user needs (offering the closest supported document when the request is unsupported) and a generic, registry-driven engine collects each type's cover-page fields. Real authentication with document persistence is planned (PL-7) and not yet built.
 
 ## Development process
 
@@ -75,13 +75,22 @@ Backend available at http://localhost:8000
 - Conversation and field state live in the browser; the backend is stateless (persistence is PL-7)
 - Backend tests with the LLM mocked (`backend/tests/test_chat.py`)
 
+### Completed (PL-6) - all document types
+- Document-type registry as the single source of truth (`backend/app/document_types.py`): all 11 catalog types with their essential cover-page fields, served via `GET /api/document-types`
+- Generic assistant (`backend/app/assistant.py`, `POST /api/assistant`): one stateless chat that triages which supported document the user needs - and, for an unsupported request, explains we can't generate it and offers the closest supported document - then collects that type's fields with Structured Outputs
+- Chat-driven picker plus clickable cards (`frontend/src/components/document-assistant.tsx`); selecting MNDA routes to the unchanged bespoke creator, the other 10 use a generic, registry-driven engine (`document-creator.tsx`, `generic-chat.tsx`, `generic-form.tsx`, `generic-preview.tsx`, `generic-pdf.tsx`)
+- Generic documents render a filled Cover Page that references the published Common Paper Standard Terms by URL (MNDA keeps its embedded Standard Terms)
+- Enhancements: after each reply the chat returns focus to the input; the assistant always ends with a follow-on question while information is still missing
+- Backend tests with the LLM mocked (`backend/tests/test_assistant.py`)
+
 ### Planned (not yet implemented)
-- PL-6: Support for all 11 document types from catalog.json
 - PL-7: Real user authentication (signup/signin) and document persistence
 
 ### Current API Endpoints
 - `POST /api/session` - Fake login; records the visitor (name, email) in SQLite, no authentication
-- `POST /api/chat` - Freeform AI chat that returns the assistant's reply and the extracted MNDA fields (stateless; takes the conversation history and current fields)
+- `POST /api/chat` - Freeform AI chat for the bespoke MNDA flow (stateless; takes the conversation history and current fields)
+- `GET /api/document-types` - The catalog of supported documents and their cover-page field definitions
+- `POST /api/assistant` - Generic AI chat that triages the document type and collects its fields (stateless; takes the conversation history, chosen document type, and current fields)
 - `GET /api/health` - Health check
 
 ### Running locally

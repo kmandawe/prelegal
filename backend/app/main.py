@@ -12,8 +12,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from app.assistant import AssistantRequest, AssistantResult
+from app.assistant import generate_reply as generate_assistant_reply
 from app.chat import ChatRequest, ChatResult, generate_reply
 from app.db import init_db, upsert_user
+from app.document_types import DOCUMENT_TYPES, DocumentType
 
 
 @asynccontextmanager
@@ -47,6 +50,12 @@ def create_session(req: SessionRequest) -> SessionResponse:
     return SessionResponse(ok=True, name=req.name, email=req.email)
 
 
+@app.get("/api/document-types", response_model=list[DocumentType])
+def document_types() -> list[DocumentType]:
+    """The catalog of supported documents and their cover-page fields (PL-6)."""
+    return DOCUMENT_TYPES
+
+
 @app.post("/api/chat", response_model=ChatResult)
 def chat(req: ChatRequest) -> ChatResult:
     """Drive Mutual NDA creation through a freeform AI chat (PL-5)."""
@@ -54,6 +63,19 @@ def chat(req: ChatRequest) -> ChatResult:
         raise HTTPException(status_code=500, detail="OPENROUTER_API_KEY is not configured")
     try:
         return generate_reply(req.messages, req.fields)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=502, detail="The AI service is currently unavailable"
+        ) from exc
+
+
+@app.post("/api/assistant", response_model=AssistantResult)
+def assistant(req: AssistantRequest) -> AssistantResult:
+    """Generic chat that triages the document type and collects its fields (PL-6)."""
+    if not os.environ.get("OPENROUTER_API_KEY"):
+        raise HTTPException(status_code=500, detail="OPENROUTER_API_KEY is not configured")
+    try:
+        return generate_assistant_reply(req)
     except Exception as exc:
         raise HTTPException(
             status_code=502, detail="The AI service is currently unavailable"
