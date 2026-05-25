@@ -2,6 +2,7 @@
 
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import type { DocumentType, DocValues } from "@/lib/document-types";
+import { LEGAL_DISCLAIMER } from "@/lib/legal";
 
 const styles = StyleSheet.create({
   page: {
@@ -47,6 +48,7 @@ const styles = StyleSheet.create({
   partyValue: { flex: 1 },
   signatureLine: { color: "#a1a1aa", fontFamily: "Courier" },
   footer: { marginTop: 24, fontSize: 8, fontStyle: "italic", color: "#71717a" },
+  disclaimer: { marginTop: 8, fontSize: 8, color: "#a16207" },
   link: { color: "#209dd7" },
 });
 
@@ -138,6 +140,7 @@ export function GenericPdfDocument({
           Standard Terms: this Cover Page incorporates the{" "}
           {doc.standard_terms_label}, available at {doc.standard_terms_url}.
         </Text>
+        <Text style={styles.disclaimer}>{LEGAL_DISCLAIMER}</Text>
       </Page>
     </Document>
   );

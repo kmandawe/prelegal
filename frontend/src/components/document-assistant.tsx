@@ -6,9 +6,6 @@ import type {
   ChatMessage,
   DocumentType,
 } from "@/lib/document-types";
-import { fetchDocumentTypes } from "@/lib/document-types";
-import { MndaCreator } from "./mnda-creator";
-import { DocumentCreator } from "./document-creator";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 
@@ -37,7 +34,12 @@ function Bubble({ message }: { message: ChatMessage }) {
   );
 }
 
-function Triage({
+/**
+ * Chat-driven document picker (PL-6). Triages what the user needs and routes to
+ * the matching creator via onSelect; the assistant offers the closest supported
+ * document when a request is unsupported.
+ */
+export function DocumentAssistant({
   docs,
   onSelect,
 }: {
@@ -101,15 +103,12 @@ function Triage({
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
       <section
         aria-label="Chat"
-        className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950"
+        className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
       >
         <h2 className="text-sm font-semibold text-[#032147] dark:text-zinc-100">
           What would you like to create?
         </h2>
-        <div
-          ref={scrollRef}
-          className="flex h-80 flex-col gap-3 overflow-y-auto pr-1"
-        >
+        <div ref={scrollRef} className="flex h-80 flex-col gap-3 overflow-y-auto pr-1">
           {messages.map((message, i) => (
             <Bubble key={i} message={message} />
           ))}
@@ -160,7 +159,7 @@ function Triage({
               key={doc.id}
               type="button"
               onClick={() => onSelect(doc)}
-              className="flex flex-col gap-1 rounded-lg border border-zinc-200 bg-white p-4 text-left shadow-sm transition-colors hover:border-[#209dd7] hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900"
+              className="flex flex-col gap-1 rounded-xl border border-zinc-200 bg-white p-4 text-left shadow-sm transition-colors hover:border-[#209dd7] hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900"
             >
               <span className="text-sm font-semibold text-[#032147] dark:text-zinc-100">
                 {doc.short_name}
@@ -174,61 +173,4 @@ function Triage({
       </section>
     </div>
   );
-}
-
-export function DocumentAssistant() {
-  const [docs, setDocs] = React.useState<DocumentType[] | null>(null);
-  const [loadError, setLoadError] = React.useState(false);
-  const [selected, setSelected] = React.useState<DocumentType | null>(null);
-
-  React.useEffect(() => {
-    fetchDocumentTypes()
-      .then(setDocs)
-      .catch(() => setLoadError(true));
-  }, []);
-
-  if (selected) {
-    return (
-      <div className="flex flex-col gap-4">
-        <button
-          type="button"
-          onClick={() => setSelected(null)}
-          className="self-start text-sm text-[#209dd7] hover:underline"
-        >
-          ← Choose a different document
-        </button>
-        <div>
-          <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
-            {selected.name}
-          </h2>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {selected.description}
-          </p>
-        </div>
-        {selected.engine === "mnda" ? (
-          <MndaCreator />
-        ) : (
-          <DocumentCreator doc={selected} />
-        )}
-      </div>
-    );
-  }
-
-  if (loadError) {
-    return (
-      <p className="text-sm text-red-600" role="alert">
-        Could not load the document catalog. Please refresh the page.
-      </p>
-    );
-  }
-
-  if (!docs) {
-    return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        Loading documents...
-      </p>
-    );
-  }
-
-  return <Triage docs={docs} onSelect={setSelected} />;
 }

@@ -8,6 +8,7 @@ import {
   deriveFields,
   fillStandardTermBody,
 } from "@/lib/mnda-content";
+import { LEGAL_DISCLAIMER } from "@/lib/legal";
 
 const styles = StyleSheet.create({
   page: {
@@ -102,6 +103,11 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontStyle: "italic",
     color: "#71717a",
+  },
+  disclaimer: {
+    marginTop: 8,
+    fontSize: 8,
+    color: "#a16207",
   },
 });
 
@@ -201,6 +207,7 @@ export function MndaPdfDocument({ values }: { values: MndaFormValues }) {
           </View>
         ))}
         <Text style={styles.footer}>{FOOTER_NOTE}</Text>
+        <Text style={styles.disclaimer}>{LEGAL_DISCLAIMER}</Text>
       </Page>
     </Document>
   );

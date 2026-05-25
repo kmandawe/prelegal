@@ -1,12 +1,12 @@
 "use client";
 
 /**
- * Tiny localStorage-backed session store for the fake login (PL-4).
- * Exposed as an external store so components can read it via
- * useSyncExternalStore without hydration mismatches.
+ * localStorage-backed session store (PL-7). Holds the bearer token and the
+ * signed-in user's profile. Exposed as an external store so components can read
+ * it via useSyncExternalStore without hydration mismatches.
  */
 
-export type Session = { name: string; email: string };
+export type Session = { token: string; name: string; email: string };
 
 const SESSION_KEY = "prelegal_session";
 const listeners = new Set<() => void>();
@@ -19,7 +19,8 @@ let cached: Session | null = null;
 function parse(raw: string | null): Session | null {
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as Session;
+    const value = JSON.parse(raw) as Session;
+    return value.token ? value : null;
   } catch {
     return null;
   }
