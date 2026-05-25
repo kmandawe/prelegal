@@ -10,8 +10,8 @@ export default function Home() {
             Mutual NDA Creator
           </h1>
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Fill out the cover page and download a completed Common Paper Mutual
-            NDA (v1.0) as a PDF.
+            Chat with the assistant to fill in your Common Paper Mutual NDA
+            (v1.0), review the fields, then download it as a PDF.
           </p>
         </header>
         <MndaCreator />
