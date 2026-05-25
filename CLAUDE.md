@@ -8,7 +8,7 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The current implementation provides the V1 technical foundation (PL-4): a fake login screen and a Mutual NDA creator (PL-3) served from a FastAPI backend, driven by a freeform AI chat (PL-5). It now supports all document types in the catalog (PL-6): a chat-driven picker triages what the user needs (offering the closest supported document when the request is unsupported) and a generic, registry-driven engine collects each type's cover-page fields. Real authentication with document persistence is planned (PL-7) and not yet built.
+The current implementation provides the V1 technical foundation (PL-4): a Mutual NDA creator (PL-3) served from a FastAPI backend, driven by a freeform AI chat (PL-5). It supports all document types in the catalog (PL-6): a chat-driven picker triages what the user needs (offering the closest supported document when the request is unsupported) and a generic, registry-driven engine collects each type's cover-page fields. It now has real multi-user authentication and document persistence (PL-7): users sign up / sign in, save the documents they create, and reopen them later, with a legal-review disclaimer throughout and a cohesive SaaS UI.
 
 ## Development process
 
@@ -61,8 +61,8 @@ Backend available at http://localhost:8000
 
 ### Completed (PL-4) - V1 foundation
 - FastAPI backend as a uv project in `backend/` (`app/main.py` routes, `app/db.py` SQLite access)
-- SQLite database recreated from scratch on each startup (`users` table)
-- Fake login screen (name + email, no authentication) gating the app; session kept in `localStorage` via `useSyncExternalStore`
+- SQLite database recreated from scratch on each startup
+- Login gating the app; session kept in `localStorage` via `useSyncExternalStore` (made into real auth in PL-7)
 - Next.js static export (`output: "export"`) served by FastAPI at localhost:8000
 - Multi-stage Dockerfile (Node builds the static export, Python serves it via FastAPI/uv)
 - Start/stop scripts for Mac, Linux, Windows that build and run the container
@@ -83,11 +83,23 @@ Backend available at http://localhost:8000
 - Enhancements: after each reply the chat returns focus to the input; the assistant always ends with a follow-on question while information is still missing
 - Backend tests with the LLM mocked (`backend/tests/test_assistant.py`)
 
-### Planned (not yet implemented)
-- PL-7: Real user authentication (signup/signin) and document persistence
+### Completed (PL-7) - multi-user auth, persistence & polish
+- Real authentication (`backend/app/db.py`, `app/main.py`): signup/signin with stdlib PBKDF2-hashed passwords (no new deps) and bearer-token sessions; `users`, `sessions`, and `documents` tables, all dropped/recreated on startup so accounts and saved documents reset per the ticket
+- Document persistence: save the structured cover-page fields as JSON and reopen them re-editable; documents are scoped to the owning user (`POST/GET/DELETE /api/documents`)
+- Auth-gated SPA (`frontend/src/components`): `auth-screen.tsx` (sign in / create account), `app-gate.tsx` validates the stored token via `GET /api/auth/me`, `workspace.tsx` is the branded shell (Create / My Documents nav, footer disclaimer), `documents-history.tsx` lists/reopens/deletes saved docs, `save-document-button.tsx` saves or updates from either creator (`lib/api.ts`, `lib/session.ts` carry the token; `lib/legal.ts` holds the disclaimer)
+- Legal-review disclaimer in the app footer, on every preview, and in both generated PDFs (`lib/legal.ts`)
+- Cohesive SaaS polish (top nav, cards, consistent brand colors); no new heavy dependencies
+- Backend tests (LLM not involved): `tests/test_auth.py`, `tests/test_documents.py` with a per-test temp SQLite DB (`tests/conftest.py`)
 
 ### Current API Endpoints
-- `POST /api/session` - Fake login; records the visitor (name, email) in SQLite, no authentication
+- `POST /api/auth/signup` - Create an account (name, email, password); returns a bearer token and the user
+- `POST /api/auth/signin` - Sign in; returns a bearer token and the user
+- `POST /api/auth/signout` - Invalidate the current bearer token
+- `GET /api/auth/me` - Return the signed-in user (used to validate a stored token); requires Bearer auth
+- `POST /api/documents` - Create or update (when `id` is given) a saved document; requires Bearer auth
+- `GET /api/documents` - List the signed-in user's saved documents (metadata only); requires Bearer auth
+- `GET /api/documents/{id}` - Fetch one saved document with its fields; requires Bearer auth
+- `DELETE /api/documents/{id}` - Delete a saved document; requires Bearer auth
 - `POST /api/chat` - Freeform AI chat for the bespoke MNDA flow (stateless; takes the conversation history and current fields)
 - `GET /api/document-types` - The catalog of supported documents and their cover-page field definitions
 - `POST /api/assistant` - Generic AI chat that triages the document type and collects its fields (stateless; takes the conversation history, chosen document type, and current fields)
@@ -97,4 +109,5 @@ Backend available at http://localhost:8000
 Requires Docker. Build and run with `scripts/start-mac.sh` (or the Linux/Windows equivalents); the app is served at http://localhost:8000. Stop with `scripts/stop-*`. The container needs `OPENROUTER_API_KEY` in `.env` (the start scripts pass it via `--env-file`).
 
 ### Tests
-Backend: `cd backend && uv run pytest` (the LLM is mocked, so no network or API key needed).
+Backend: `cd backend && uv run pytest` runs the full suite (`tests/test_chat.py` for the MNDA flow, `tests/test_assistant.py` for the generic assistant and document catalog, `tests/test_auth.py` and `tests/test_documents.py` for auth and persistence); the LLM is mocked and the DB is a per-test temp file, so no network or API key is needed.
+Frontend: `cd frontend && npm run build` (and `npm run lint`); requires Node 20+ (the Docker build uses Node 22).

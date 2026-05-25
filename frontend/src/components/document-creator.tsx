@@ -6,9 +6,31 @@ import { GenericChat } from "./generic-chat";
 import { GenericForm } from "./generic-form";
 import { GenericPreview } from "./generic-preview";
 import { GenericDownloadButton } from "./generic-download-button";
+import { SaveDocumentButton } from "./save-document-button";
 
-export function DocumentCreator({ doc }: { doc: DocumentType }) {
-  const [values, setValues] = React.useState<DocValues>({});
+function deriveTitle(doc: DocumentType, values: DocValues): string {
+  const companies = doc.fields
+    .filter((f) => f.key.endsWith("Company"))
+    .map((f) => values[f.key])
+    .filter((v): v is string => Boolean(v && v.trim()))
+    .slice(0, 2);
+  return companies.length
+    ? `${companies.join(" & ")} - ${doc.short_name}`
+    : `Untitled ${doc.short_name}`;
+}
+
+export function DocumentCreator({
+  doc,
+  initialFields,
+  savedId,
+}: {
+  doc: DocumentType;
+  initialFields?: Record<string, unknown>;
+  savedId?: number;
+}) {
+  const [values, setValues] = React.useState<DocValues>(
+    () => (initialFields as DocValues) ?? {},
+  );
   const [messages, setMessages] = React.useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -39,8 +61,13 @@ export function DocumentCreator({ doc }: { doc: DocumentType }) {
             <GenericForm doc={doc} values={values} setValues={setValues} />
           </div>
         </details>
-        <div className="sticky bottom-0 -mx-2 border-t border-zinc-200 bg-white/90 px-2 py-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
+        <div className="sticky bottom-0 -mx-2 flex flex-wrap items-start gap-3 border-t border-zinc-200 bg-white/90 px-2 py-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
           <GenericDownloadButton doc={doc} values={values} />
+          <SaveDocumentButton
+            documentType={doc.id}
+            initialSavedId={savedId}
+            buildPayload={() => ({ title: deriveTitle(doc, values), fields: values })}
+          />
         </div>
       </section>
 

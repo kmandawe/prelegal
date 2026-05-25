@@ -1,6 +1,10 @@
 # prelegal
 A platform for drafting common legal agreements
 
+Sign up, chat with an AI assistant to pick and fill in a Common Paper agreement,
+then save it to your account and download it as a PDF. Every generated document
+is a draft that should be reviewed by a qualified attorney.
+
 ## Status
 🚧 **In progress** — this project is currently under active development and is expected to be completed by **2026-05-26** (approximately 1 week from 2026-05-19).
 
@@ -23,7 +27,8 @@ scripts/stop-windows.ps1
 ```
 
 The container builds the Next.js frontend (static export) and serves it from a
-FastAPI backend. A fresh SQLite database is created on each start.
+FastAPI backend. A fresh SQLite database is created on each start, so registered
+accounts and saved documents are reset whenever the container restarts.
 
 ## Layout
 
