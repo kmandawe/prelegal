@@ -3,6 +3,7 @@
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { mndaSchema, defaultValues, type MndaFormValues } from "@/lib/schema";
+import { MndaChat } from "./mnda-chat";
 import { MndaForm } from "./mnda-form";
 import { MndaPreview } from "./mnda-preview";
 import { DownloadButton } from "./download-button";
@@ -21,7 +22,15 @@ export function MndaCreator() {
           aria-label="Form"
           className="flex flex-col gap-6"
         >
-          <MndaForm />
+          <MndaChat />
+          <details className="rounded-lg border border-zinc-200 dark:border-zinc-800" open>
+            <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-[#032147] dark:text-zinc-100">
+              Review &amp; edit fields
+            </summary>
+            <div className="px-4 pb-4">
+              <MndaForm />
+            </div>
+          </details>
           <div className="sticky bottom-0 -mx-2 border-t border-zinc-200 bg-white/90 px-2 py-4 backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/90">
             <DownloadButton />
           </div>
